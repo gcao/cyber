@@ -15,6 +15,19 @@ pub const Tokenizer = parser.Tokenizer;
 pub const TokenizeState = parser.TokenizeState;
 pub const TokenType = parser.TokenType;
 
+const gene_parser = @import("gene_parser.zig");
+pub const GeneParser = gene_parser.Parser;
+pub const GeneParseResultView = gene_parser.ResultView;
+pub const GeneParseResult = gene_parser.Result;
+pub const GeneNode = gene_parser.Node;
+pub const GeneNodeType = gene_parser.NodeType;
+pub const GeneNodeId = gene_parser.NodeId;
+pub const GeneBinaryExprOp = gene_parser.BinaryExprOp;
+pub const GeneToken = gene_parser.Token;
+pub const GeneTokenizer = gene_parser.Tokenizer;
+pub const GeneTokenizeState = gene_parser.TokenizeState;
+pub const GeneTokenType = gene_parser.TokenType;
+
 pub const sema = @import("sema.zig");
 pub const unescapeString = sema.unescapeString;
 
@@ -146,7 +159,7 @@ pub export fn hotSection() linksection(HotSection) callconv(.C) void {}
 
 /// Force the compiler to order linksection first on given function.
 /// Use exported c function so release builds don't remove them.
-pub fn forceSectionDep(_: *const fn() callconv(.C) void) void {} 
+pub fn forceSectionDep(_: *const fn () callconv(.C) void) void {}
 
 pub fn forceSectionDeps() !void {
     forceSectionDep(hotSection);

@@ -81,7 +81,7 @@ pub fn build(b: *std.build.Builder) !void {
         if (lib.optimize != .Debug) {
             lib.strip = true;
         }
-        lib.addIncludePath(.{. path = thisDir() ++ "/src" });
+        lib.addIncludePath(.{ .path = thisDir() ++ "/src" });
 
         // Allow dynamic libraries to be loaded by filename in the cwd.
         // lib.addRPath(".");
@@ -218,6 +218,31 @@ pub fn build(b: *std.build.Builder) !void {
     }
 
     {
+        const mainStep = b.step("test-gene-parser", "Run gene parser tests.");
+        var step = b.addTest(.{
+            .root_source_file = .{ .path = "./test/gene_parser_test.zig" },
+            .target = target,
+            .optimize = optimize,
+            .filter = testFilter,
+            .main_pkg_path = .{ .path = "." },
+        });
+        step.addIncludePath(.{ .path = thisDir() ++ "/src" });
+
+        try addBuildOptions(b, step, opts);
+        step.addModule("stdx", stdx);
+        step.rdynamic = true;
+
+        tcc_lib.addModule(step, "tcc", tcc);
+        tcc_lib.buildAndLink(b, step, .{
+            .selinux = opts.selinux,
+        });
+        mainStep.dependOn(&b.addRunArtifact(step).step);
+
+        step = try addTraceTest(b, opts);
+        mainStep.dependOn(&b.addRunArtifact(step).step);
+    }
+
+    {
         // Just trace test.
         const mainStep = b.step("test-trace", "Run trace tests.");
         const step = try addTraceTest(b, opts);
@@ -271,7 +296,7 @@ fn addBuildOptions(b: *std.build.Builder, step: *std.build.LibExeObjStep, opts: 
     build_options.addOption(config.Engine, "engine", engine);
     build_options.addOption(bool, "trace", opts.trace);
     build_options.addOption(bool, "trackGlobalRC", opts.trackGlobalRc);
-    build_options.addOption([]const u8, "full_version", b.fmt("Cyber {s} build-{s}-{s}", .{Version, buildTag, commitTag}));
+    build_options.addOption([]const u8, "full_version", b.fmt("Cyber {s} build-{s}-{s}", .{ Version, buildTag, commitTag }));
     // build_options.addOption(bool, "trace", true);
 
     step.addOptions("build_options", build_options);
@@ -344,9 +369,6 @@ pub fn buildCVM(alloc: std.mem.Allocator, step: *std.build.CompileStep, opts: Op
     if (opts.trackGlobalRc) {
         try cflags.append("-DTRACK_GLOBAL_RC=1");
     }
-    step.addIncludePath(.{ .path = thisDir() ++ "/src"});
-    step.addCSourceFile(.{
-        .file = .{ .path = thisDir() ++ "/src/vm.c" },
-        .flags = cflags.items
-    });
+    step.addIncludePath(.{ .path = thisDir() ++ "/src" });
+    step.addCSourceFile(.{ .file = .{ .path = thisDir() ++ "/src/vm.c" }, .flags = cflags.items });
 }

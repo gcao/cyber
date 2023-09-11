@@ -11,6 +11,6 @@ test {
     t.refAllDecls(vm);
 
     _ = @import("behavior_test.zig");
-    
+
     _ = @import("../src/lib.zig");
-} 
+}
